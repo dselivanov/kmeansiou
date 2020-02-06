@@ -34,6 +34,7 @@ print_status = function(..., verbose) {
   }
 }
 
+#' K-means clustering of 2-d data with IoU distance
 #' @description Allows to cluster 2-dimensional with k-means using intersection over union distance.
 #' This is useful for anchors initialization in the YOLO-family of models for object detection.
 #' See Redmon et al. (2016) <arXiv:1612.08242>, Redmon et al. (2016) <arXiv:1804.02767>.
@@ -73,5 +74,11 @@ kmeans_iou = function(
     }
     print_status(sprintf("%s avg IOU: %.3f", Sys.time(), clust_iou/N), verbose = verbose)
   }
+  # sort centroid in increasing order as it was in original YOLO implementation
+  centroids2 = centroids**2
+  clusters_ord = sqrt(centroids2[, 1] +  centroids2[, 2])
+  clusters_ord = order(clusters_ord)
+  centroids = centroids[clusters_ord, ]
+  cluster_membership = match(cluster_membership, clusters_ord)
   list(centroids = centroids, cluster_membership = cluster_membership)
 }
