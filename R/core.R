@@ -82,3 +82,9 @@ kmeans_iou = function(
   cluster_membership = match(cluster_membership, clusters_ord)
   list(centroids = centroids, cluster_membership = cluster_membership)
 }
+
+# useful to copy-paste cluster to YOLO config
+yolo_centroids_string = function(clusters, w = 1024, h = 1024) {
+  paste(as.integer(clusters$centroids[, 1] * w), as.integer(clusters$centroids[, 2] * h), sep = ',', collapse = ', ')
+}
+
