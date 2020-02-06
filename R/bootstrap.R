@@ -9,7 +9,6 @@
 #' @export
 bootstrap_boxes = function(x, scale = 2, size = nrow(x) * 10, quantiles = c(0.05, 0.95)) {
   w_quantiles = quantile(x[, 1], quantiles)
-
   h_quantiles = quantile(x[, 2], quantiles)
 
   N = nrow(x)
@@ -21,5 +20,12 @@ bootstrap_boxes = function(x, scale = 2, size = nrow(x) * 10, quantiles = c(0.05
   # filter out boxes which are out of the range of original scales
   x_resample = x_resample[x_resample[, 1] %between% w_quantiles, , drop = F]
   x_resample = x_resample[x_resample[, 2] %between% h_quantiles, , drop = F]
+
+  attr(x_resample, 'width_limits') = w_quantiles
+  attr(x_resample, 'height_limits') = h_quantiles
   x_resample
+}
+
+`%between%` = function(x, range) {
+  x >= range[[1]] & x <= range[[2]]
 }
