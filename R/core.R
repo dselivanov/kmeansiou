@@ -42,6 +42,7 @@ print_status = function(..., verbose) {
 #' @param k number of clusters
 #' @param iter number of k-means iterations
 #' @param init 2-d matrix of initial centroids. Should have \code{k} rows
+#' @param early_stop integer - stop k-means if there is no improvement during last \code{early_stop} iterations
 #' @param verbose logical, whether to print information during fitting the model
 #' @return list of 2 values. First is a matrix of cluster centers,
 #' second is cluster membership indices.
@@ -51,12 +52,16 @@ kmeans_iou = function(
   k,
   iter = 10,
   init = x[sample(nrow(x), size = k), , drop = FALSE],
+  early_stop = 3L,
   verbose = FALSE) {
 
   stopifnot(is.matrix(x))
   N = nrow(x)
   centroids = init
-
+  iter_without_improvement = 0
+  best_iter = 0
+  best_score = 0
+  best = list()
   for (j in seq_len(iter)) {
     ious = matrix(0, nrow = N, ncol = k)
     for (i in seq_len(k)) {
@@ -72,15 +77,32 @@ kmeans_iou = function(
       clust_iou = clust_iou + sum(ious[cluster_membership_index, ind, drop = FALSE])
       centroids[ind, ] = colMeans(x[cluster_membership_index, , drop = FALSE])
     }
-    print_status(sprintf("%s avg IOU: %.3f", Sys.time(), clust_iou/N), verbose = verbose)
+    score = clust_iou / N
+    if (score > best_score) {
+      best_score = score
+      best_iter = j
+      best = list(centroids = centroids, cluster_membership = cluster_membership)
+      iter_without_improvement = 0L
+    } else {
+      iter_without_improvement = iter_without_improvement + 1L
+    }
+    if (iter_without_improvement >= early_stop) {
+      msg = sprintf("stoping at iteration %d - no improvement during last %d iterations",
+                    j, early_stop)
+      print_status(msg, verbose = verbose)
+      break
+    }
+
+    print_status(sprintf("%s iter %d avg IOU: %.3f", Sys.time(), j, score), verbose = verbose)
   }
+  print_status(sprintf("best iter = %d, best score = %.3f", best_iter, best_score), verbose = verbose)
   # sort centroid in increasing order as it was in original YOLO implementation
-  centroids2 = centroids**2
+  centroids2 = best$centroids**2
   clusters_ord = sqrt(centroids2[, 1] +  centroids2[, 2])
   clusters_ord = order(clusters_ord)
-  centroids = centroids[clusters_ord, ]
-  cluster_membership = match(cluster_membership, clusters_ord)
-  list(centroids = centroids, cluster_membership = cluster_membership)
+  best$centroids = best$centroids[clusters_ord, ]
+  best$cluster_membership = match(best$cluster_membership, clusters_ord)
+  best
 }
 
 # useful to copy-paste cluster to YOLO config

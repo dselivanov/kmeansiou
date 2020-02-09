@@ -5,7 +5,7 @@
 \title{K-means clustering of 2-d data with IoU distance}
 \usage{
 kmeans_iou(x, k, iter = 10, init = x[sample(nrow(x), size = k), , drop
-  = FALSE], verbose = FALSE)
+  = FALSE], early_stop = 3L, verbose = FALSE)
 }
 \arguments{
 \item{x}{input 2-d matrix: first column is wisth, second column is height of the bounding box}
@@ -15,6 +15,8 @@ kmeans_iou(x, k, iter = 10, init = x[sample(nrow(x), size = k), , drop
 \item{iter}{number of k-means iterations}
 
 \item{init}{2-d matrix of initial centroids. Should have \code{k} rows}
+
+\item{early_stop}{integer - stop k-means if there is no improvement during last \code{early_stop} iterations}
 
 \item{verbose}{logical, whether to print information during fitting the model}
 }
